@@ -1,12 +1,13 @@
 package common
 
 import (
+	"github.com/wudaoluo/dcache/internal"
 	"github.com/wudaoluo/golog"
 	"github.com/wudaoluo/golog/conf"
-	"github.com/wudaoluo/dcache/internal"
 )
+
 func InitLogs() {
-	logPath := "./log"
+	logPath := "./logs/" + internal.PROJECT_NAME + ".log"
 	golog.SetLogger(
 		golog.ZAPLOG,
 		conf.WithLogType(conf.LogJsontype),

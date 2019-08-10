@@ -89,26 +89,42 @@ func process(ch chan int, wg *sync.WaitGroup) {
 
 	var data = &internal.Data{}
 	value := bytes.Repeat([]byte("a"), valueSize)
-	for {
-		_, ok := <-ch
-		if !ok {
-			c.Close()
-			//golog.Warn("ch close")
-			return
+	sig := make(chan struct{}, 100)
+
+	go func(ch chan int) {
+		defer func() {
+			//sig <- struct{}{}
+			close(sig)
+		}()
+		var d = &internal.Data{}
+		for {
+			_, ok := <-ch
+			if !ok {
+				//c.Close()
+				//golog.Warn("ch close")
+				return
+			}
+
+			d.Op = op
+			d.Key = []byte(strconv.Itoa(rand.Intn(keyspacelen)))
+			d.Value = value
+			_, err = c.WriteMsg(d)
+			if err != nil {
+				fmt.Println("err", err)
+				return
+			}
+
+			sig <- struct{}{}
 		}
 
-		data.Op = op
-		data.Key = []byte(strconv.Itoa(rand.Intn(keyspacelen)))
-		data.Value = value
-		_, err = c.WriteMsg(data)
+	}(ch)
 
-		data.Value = nil
+	for range sig {
 		err = c.ReadMsg(data)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Println("err1", err)
 			return
 		}
-
 	}
 
 }

@@ -42,7 +42,7 @@ func (tc *tcpConn) ReadMsg(data *internal.Data) error {
 
 	//TODO ERR 统一处理
 	if msgLen > MAX_MSG_LEN {
-		return fmt.Errorf("message too long")
+		return fmt.Errorf("message too long %d", msgLen)
 	}
 
 	if msgLen < MIN_MSG_LEN {

@@ -67,9 +67,16 @@ func (t *tcpServer) Run() {
 			}
 		}
 
-		go t.handler(conn)
+		go t.newHandler(conn)
 
 	}
+}
+
+func (t *tcpServer) newHandler(conn net.Conn) {
+	m := NewMux(conn)
+	go m.Read()
+	go m.Write()
+	go m.Operate()
 }
 
 func (t *tcpServer) handler(conn net.Conn) {
@@ -84,7 +91,7 @@ func (t *tcpServer) handler(conn net.Conn) {
 			return
 		}
 		if err != nil {
-			golog.Error("tcpServer.handler", "clientIP", "c.RemoteIP()", "err", err)
+			golog.Error("tcpServer.handler", "clientIP", c.RemoteIP(), "err", err)
 			return
 		}
 
