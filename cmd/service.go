@@ -16,12 +16,11 @@ limitations under the License.
 package cmd
 
 import (
+	"sync"
 
 	"github.com/spf13/cobra"
 	"github.com/wudaoluo/dcache/internal"
 	"github.com/wudaoluo/dcache/service"
-	"sync"
-	"fmt"
 )
 
 // serviceCmd represents the service command
@@ -37,9 +36,9 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var wg = sync.WaitGroup{}
 
-		switch  {
+		switch {
 		case serviceFlag.TCP:
-			runService(&wg,service.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen)))
+			runService(&wg, service.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen)))
 			fallthrough
 
 		case serviceFlag.GRPC:
@@ -53,14 +52,13 @@ to quickly create a Cobra application.`,
 	},
 }
 
-func runService(wg *sync.WaitGroup,s service.Service) {
+func runService(wg *sync.WaitGroup, s service.Service) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		s.Run()
 	}()
 }
-
 
 func init() {
 	rootCmd.AddCommand(serviceCmd)
@@ -74,13 +72,12 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// serviceCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	serviceCmd.Flags().BoolVar(&serviceFlag.TCP,"tcp",true,"run tcp server")
-	serviceCmd.Flags().BoolVar(&serviceFlag.GRPC,"grpc",false,"run grpc server")
-	serviceCmd.Flags().BoolVar(&serviceFlag.ALL,"all",false,"run all server")
+	serviceCmd.Flags().BoolVar(&serviceFlag.TCP, "tcp", true, "run tcp server")
+	serviceCmd.Flags().BoolVar(&serviceFlag.GRPC, "grpc", false, "run grpc server")
+	serviceCmd.Flags().BoolVar(&serviceFlag.ALL, "all", false, "run all server")
 
-	serviceCmd.Flags().StringVar(&serviceFlag.Listen,"listen","0.0.0.0","listen addr")
+	serviceCmd.Flags().StringVar(&serviceFlag.Listen, "listen", "0.0.0.0", "listen addr")
 
 }
-
 
 var serviceFlag = &internal.Services{}

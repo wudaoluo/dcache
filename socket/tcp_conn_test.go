@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"github.com/wudaoluo/dcache/internal"
+	"io"
 )
 func TestConn(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:7777")
@@ -29,8 +30,7 @@ func TestConn(t *testing.T) {
 		n,_:=cc.WriteMsg(byte(3),[]byte("cccsscscc"),[]byte("bbbbbbbbbbbbbbbbbbbbbbbbbbb"))
 
 		fmt.Println("wirite ",n)
-		time.Sleep(10*time.Second)
-		//cc.Close()
+		c1.Close()
 	}()
 
 	for {
@@ -44,13 +44,21 @@ func TestConn(t *testing.T) {
 
 			c := NewTcpConn(conn)
 
+			for {
+
+
 			var req = internal.Req{}
 			time.Sleep(1*time.Second)
 			err = c.ReadMsg(&req)
 			if err != nil {
-				panic(err)
+				if err == io.EOF {
+					fmt.Println("io.EOF")
+					return
+				}
+				//panic(err)
 			}
 			fmt.Println(req)
+			}
 		}()
 
 	}

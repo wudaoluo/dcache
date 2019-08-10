@@ -1,25 +1,21 @@
 package internal
 
-
-
 type Services struct {
-	TCP bool
-	GRPC bool
-	ALL bool
+	TCP    bool
+	GRPC   bool
+	ALL    bool
 	Listen string
 }
 
-
-
-type Req struct {
-	Op byte
+type Data struct {
+	Op     byte
 	Retain byte
-	Key []byte
-	Value []byte
+	Key    []byte
+	Value  []byte
 }
 
-func (r *Req) IsPut() bool {
-	if r.Op == byte(2) {
+func (d *Data) IsValue() bool {
+	if d.Op == OP_REQ_PUT || d.Op == OP_REQ_GET {
 		return true
 	}
 	return false
