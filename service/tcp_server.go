@@ -2,23 +2,23 @@ package service
 
 import (
 	"net"
+	"io"
 	"time"
 
+	"golang.org/x/net/netutil"
 	"github.com/wudaoluo/golog"
 
 	"github.com/wudaoluo/dcache/socket"
-
-	"io"
-
 	"github.com/wudaoluo/dcache/internal"
 )
 
 type tcpServer struct {
-	listen string
+	listen  string
+	maxConn int
 }
 
-func NewTcpServer(listen string) Service {
-	return &tcpServer{listen: listen}
+func NewTcpServer(listen string, maxConn int) Service {
+	return &tcpServer{listen: listen, maxConn: maxConn}
 }
 
 func (t *tcpServer) Run() {
@@ -29,12 +29,14 @@ func (t *tcpServer) Run() {
 		return
 	}
 
+	limitListener := netutil.LimitListener(ln, t.maxConn)
+
 	defer ln.Close()
-	golog.Info("tcpServer.Run", "tcp server listening addr:", t.listen)
+	golog.Info("tcpServer.Run", "tcp server listening addr:", t.listen, "maxconn", t.maxConn)
 
 	var tempDelay time.Duration
 	for {
-		conn, err := ln.Accept()
+		conn, err := limitListener.Accept()
 		//if err != nil {
 		//	select {
 		//	case <-ctx.Done():
@@ -85,6 +87,7 @@ func (t *tcpServer) handler(conn net.Conn) {
 	var err error
 	for {
 		var data = &internal.Data{}
+		time.Sleep(3 * time.Second)
 		err = c.ReadMsg(data)
 		if err == io.EOF {
 			golog.Info("tcpServer.handler", "clientIP", c.RemoteIP(), "err", "io.EOF")

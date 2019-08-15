@@ -38,7 +38,7 @@ to quickly create a Cobra application.`,
 
 		switch {
 		case serviceFlag.TCP:
-			runService(&wg, service.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen)))
+			runService(&wg, service.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn))
 			fallthrough
 
 		case serviceFlag.GRPC:
@@ -76,7 +76,8 @@ func init() {
 	serviceCmd.Flags().BoolVar(&serviceFlag.GRPC, "grpc", false, "run grpc server")
 	serviceCmd.Flags().BoolVar(&serviceFlag.ALL, "all", false, "run all server")
 
-	serviceCmd.Flags().StringVar(&serviceFlag.Listen, "listen", "0.0.0.0", "listen addr")
+	serviceCmd.Flags().StringVar(&serviceFlag.Listen, "listen", "0.0.0.0", "--listen")
+	serviceCmd.Flags().IntVar(&serviceFlag.MaxConn, "maxconn", 1000, "--maxconn")
 
 }
 

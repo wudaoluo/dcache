@@ -24,11 +24,9 @@ uint64 == 8 byte
 
 package bit
 
-
 const MAX_UINT8 = 7
 
 type BitUint8 uint8
-
 
 func (b *BitUint8) Set(pos uint8) {
 	if pos > MAX_UINT8 {
@@ -42,7 +40,7 @@ func (b *BitUint8) UnSet(pos uint8) {
 	if pos > MAX_UINT8 {
 		pos = MAX_UINT8
 	}
-	*b = *b &^ (1<<pos)
+	*b = *b &^ (1 << pos)
 }
 
 func (b *BitUint8) IsSet(pos uint8) bool {
@@ -50,7 +48,7 @@ func (b *BitUint8) IsSet(pos uint8) bool {
 		pos = MAX_UINT8
 	}
 
-	return *b >> pos & 1 == 1
+	return *b>>pos&1 == 1
 }
 
 func (b BitUint8) Get(pos uint8) int {
@@ -62,7 +60,7 @@ func (b BitUint8) Get(pos uint8) int {
 }
 
 func (b *BitUint8) Reset() {
-	 *b= *b&0
+	*b = *b & 0
 }
 
 func (b BitUint8) GetValue() int {

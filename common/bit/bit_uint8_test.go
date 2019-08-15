@@ -1,8 +1,8 @@
 package bit
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestBitUint8(t *testing.T) {
@@ -14,10 +14,6 @@ func TestBitUint8(t *testing.T) {
 	//a.UnSet(3)
 	fmt.Println(a.GetValue())
 	fmt.Println(a.IsSet(2))
-
-
-
-
 
 }
 

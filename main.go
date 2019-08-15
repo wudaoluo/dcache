@@ -16,13 +16,13 @@ limitations under the License.
 package main
 
 import (
-  "github.com/wudaoluo/dcache/cmd"
-  "github.com/wudaoluo/dcache/common"
+	"github.com/wudaoluo/dcache/cmd"
+	"github.com/wudaoluo/dcache/common"
 )
 
 func main() {
-  common.InitLogs()
-  defer common.FlushLogs()
+	common.InitLogs()
+	defer common.FlushLogs()
 
-  cmd.Execute()
+	cmd.Execute()
 }

@@ -1,10 +1,11 @@
 package internal
 
 type Services struct {
-	TCP    bool
-	GRPC   bool
-	ALL    bool
-	Listen string
+	TCP     bool
+	GRPC    bool
+	ALL     bool
+	Listen  string
+	MaxConn int
 }
 
 type Data struct {

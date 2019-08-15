@@ -1,13 +1,15 @@
 package socket
 
 import (
-	"testing"
-	"net"
 	"fmt"
-	"time"
-	"github.com/wudaoluo/dcache/internal"
 	"io"
+	"net"
+	"testing"
+	"time"
+
+	"github.com/wudaoluo/dcache/internal"
 )
+
 func TestConn(t *testing.T) {
 	ln, err := net.Listen("tcp", "127.0.0.1:7777")
 
@@ -19,17 +21,17 @@ func TestConn(t *testing.T) {
 	defer ln.Close()
 
 	go func() {
-		time.Sleep(1* time.Second)
-		c1,err:= net.Dial("tcp","127.0.0.1:7777")
+		time.Sleep(1 * time.Second)
+		c1, err := net.Dial("tcp", "127.0.0.1:7777")
 		if err != nil {
 			t.Error(err)
 			return
 		}
 
-		cc :=NewTcpConn(c1)
-		n,_:=cc.WriteMsg(byte(3),[]byte("cccsscscc"),[]byte("bbbbbbbbbbbbbbbbbbbbbbbbbbb"))
+		cc := NewTcpConn(c1)
+		n, _ := cc.WriteMsg(byte(3), []byte("cccsscscc"), []byte("bbbbbbbbbbbbbbbbbbbbbbbbbbb"))
 
-		fmt.Println("wirite ",n)
+		fmt.Println("wirite ", n)
 		c1.Close()
 	}()
 
@@ -39,28 +41,25 @@ func TestConn(t *testing.T) {
 			panic(err)
 		}
 
-
 		go func() {
 
 			c := NewTcpConn(conn)
 
 			for {
 
-
-			var req = internal.Req{}
-			time.Sleep(1*time.Second)
-			err = c.ReadMsg(&req)
-			if err != nil {
-				if err == io.EOF {
-					fmt.Println("io.EOF")
-					return
+				var req = internal.Req{}
+				time.Sleep(1 * time.Second)
+				err = c.ReadMsg(&req)
+				if err != nil {
+					if err == io.EOF {
+						fmt.Println("io.EOF")
+						return
+					}
+					//panic(err)
 				}
-				//panic(err)
-			}
-			fmt.Println(req)
+				fmt.Println(req)
 			}
 		}()
 
 	}
 }
-
