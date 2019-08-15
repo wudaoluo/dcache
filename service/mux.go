@@ -3,6 +3,7 @@ package service
 import (
 	"io"
 	"net"
+	"runtime"
 	"sync"
 
 	"github.com/ivpusic/grpool"
@@ -14,7 +15,7 @@ import (
 
 //TODO 根据情况调整
 const MAX_RECEIVE_DATA = 1024
-
+var pool = grpool.NewPool(runtime.NumCPU()*2-1, 96)
 type mux struct {
 	datas        chan *internal.Data
 	processDatas chan *internal.Data
@@ -46,7 +47,7 @@ func NewMux(conn net.Conn) *mux {
 
 func (m *mux) Operate() {
 	defer close(m.processDatas)
-	pool := grpool.NewPool(4, 96)
+
 	defer pool.Release()
 	for d := range m.datas {
 		data := d

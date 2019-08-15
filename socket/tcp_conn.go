@@ -3,11 +3,10 @@ package socket
 import (
 	"encoding/binary"
 	"fmt"
-	"io"
-	"net"
-
 	"github.com/wudaoluo/dcache/internal"
 	"github.com/wudaoluo/golog"
+	"io"
+	"net"
 )
 
 type tcpConn struct {
@@ -17,8 +16,8 @@ type tcpConn struct {
 
 func NewTcpConn(conn net.Conn) Socker {
 	return &tcpConn{
-		conn,
-		false,
+		Conn:conn,
+		closed:false,
 	}
 }
 
