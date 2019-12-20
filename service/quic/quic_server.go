@@ -69,11 +69,11 @@ func (q *quicServer) streamHandler(stream quic.Stream) {
 		var data = &internal.Data{}
 		err = c.ReadMsg(data)
 		if err == io.EOF {
-			golog.Info("tcpServer.handler", "clientIP", c.RemoteIP(), "err", "io.EOF")
+			golog.Info("quicServer.handler", "clientIP", c.RemoteIP(), "err", "io.EOF")
 			return
 		}
 		if err != nil {
-			golog.Error("tcpServer.handler", "clientIP", c.RemoteIP(), "err", err)
+			golog.Error("quicServer.handler", "clientIP", c.RemoteIP(), "err", err)
 			return
 		}
 

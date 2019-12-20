@@ -41,7 +41,7 @@ func (qs *quicStream) Close() {
 
 
 func (qs *quicStream) ReadMsg(data *internal.Data) error {
-	qs.stream.SetReadDeadline(time.Now().Add(qs.readAge))
+	//qs.stream.SetReadDeadline(time.Now().Add(qs.readAge))
 	msgHeadBuf := make([]byte, MSG_HEAD_LEN, MSG_HEAD_LEN)
 	msgLen, err := qs.ReadLen(msgHeadBuf)
 	if err != nil {
