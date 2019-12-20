@@ -53,11 +53,21 @@ func main() {
 		close(ch)
 	}()
 
+	tlsConf := &tls.Config{
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"quic-echo-example"},
+	}
+	session, err := quic.DialAddr(server, tlsConf, nil)
+	if err != nil {
+		panic(err)
+	}
+
+
 	var wg = sync.WaitGroup{}
 	start := time.Now()
 	for i := 0; i < threads; i++ {
 		wg.Add(1)
-		go process(ch, &wg)
+		go process(ch, &wg,session)
 	}
 
 	wg.Wait()
@@ -68,23 +78,13 @@ func main() {
 	fmt.Printf("throughput is %f MB/s\n", +float64(total*valueSize)/1e6/d.Seconds())
 }
 
-func process(ch chan int, wg *sync.WaitGroup) {
+func process(ch chan int, wg *sync.WaitGroup,session quic.Session) {
 	defer wg.Done()
 
 	//conn, err := net.Dial("tcp", server)
 	//if err != nil {
 	//	panic(err)
 	//}
-
-
-	tlsConf := &tls.Config{
-		InsecureSkipVerify: true,
-		NextProtos:         []string{"quic-echo-example"},
-	}
-	session, err := quic.DialAddr(server, tlsConf, nil)
-	if err != nil {
-		panic(err)
-	}
 
 	stream, err := session.OpenStreamSync(context.Background())
 	if err != nil {
