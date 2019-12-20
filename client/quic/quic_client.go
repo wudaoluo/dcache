@@ -20,7 +20,7 @@ import (
 )
 
 var typ, server, operation string
-var total, valueSize, threads, keyspacelen, pipelen int
+var total, valueSize, threads, keyspacelen, pipelen,session int
 
 func init() {
 	//flag.StringVar(&typ, "type", "redis", "cache server type")
@@ -28,6 +28,7 @@ func init() {
 	flag.IntVar(&total, "n", 1000, "total number of requests")
 	flag.IntVar(&valueSize, "d", 1000, "data size of SET/GET value in bytes")
 	flag.IntVar(&threads, "c", 1, "number of parallel connections")
+	flag.IntVar(&session, "s", 1, "number of parallel connections")
 	flag.StringVar(&operation, "t", "put", "test set, could be get/put/del")
 	flag.IntVar(&keyspacelen, "r", 10000000000, "keyspacelen, use random keys from 0 to keyspacelen-1")
 	//flag.IntVar(&pipelen, "P", 1, "pipeline length")
@@ -57,19 +58,21 @@ func main() {
 		InsecureSkipVerify: true,
 		NextProtos:         []string{"quic-echo-example"},
 	}
-	session, err := quic.DialAddr(server, tlsConf, nil)
-	if err != nil {
-		panic(err)
-	}
-
-
-	var wg = sync.WaitGroup{}
 	start := time.Now()
-	for i := 0; i < threads; i++ {
-		wg.Add(1)
-		go process(ch, &wg,session)
-	}
+	var wg= sync.WaitGroup{}
+	for ii:=0;ii<session;ii++ {
+		session, err := quic.DialAddr(server, tlsConf, nil)
+		if err != nil {
+			panic(err)
+		}
 
+		for i := 0; i < threads; i++ {
+			wg.Add(1)
+			go process(ch, &wg, session)
+		}
+
+
+	}
 	wg.Wait()
 	d := time.Now().Sub(start)
 
