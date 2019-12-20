@@ -16,6 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"github.com/wudaoluo/dcache/service/quic"
+	"github.com/wudaoluo/dcache/service/tcp"
+	"github.com/wudaoluo/golog"
 	"sync"
 
 	"github.com/spf13/cobra"
@@ -36,16 +39,16 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		var wg = sync.WaitGroup{}
 
-		switch {
-		case serviceFlag.TCP:
-			runService(&wg, service.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn))
-			fallthrough
+		if serviceFlag.TCP || serviceFlag.ALL{
+			runService(&wg, tcp.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn))
+		}
 
-		case serviceFlag.GRPC:
-			fallthrough
+		if serviceFlag.QUIC || serviceFlag.ALL{
+			runService(&wg,quic.NewQuicServer(internal.QUIC_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn))
+		}
 
-		default:
-
+		if serviceFlag.GRPC || serviceFlag.ALL{
+			golog.Error("tcpServer.Run", "grpc","不支持")
 		}
 
 		wg.Wait()
@@ -73,6 +76,7 @@ func init() {
 	// is called directly, e.g.:
 	// serviceCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	serviceCmd.Flags().BoolVar(&serviceFlag.TCP, "tcp", true, "run tcp server")
+	serviceCmd.Flags().BoolVar(&serviceFlag.QUIC, "quic", true, "run quic server")
 	serviceCmd.Flags().BoolVar(&serviceFlag.GRPC, "grpc", false, "run grpc server")
 	serviceCmd.Flags().BoolVar(&serviceFlag.ALL, "all", false, "run all server")
 

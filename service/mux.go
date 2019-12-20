@@ -1,29 +1,31 @@
 package service
 
 import (
+	"github.com/wudaoluo/dcache/cache"
+	"github.com/wudaoluo/dcache/plugin/session"
 	"io"
-	"net"
 	"runtime"
 	"sync"
 
 	"github.com/ivpusic/grpool"
-	"github.com/wudaoluo/dcache/cache"
 	"github.com/wudaoluo/dcache/internal"
-	"github.com/wudaoluo/dcache/socket"
 	"github.com/wudaoluo/golog"
 )
 
 //TODO 根据情况调整
 const MAX_RECEIVE_DATA = 1024
+
+//numWorkers和jobQueueLen 根据情况调整
 var pool = grpool.NewPool(runtime.NumCPU()*2-1, 96)
+
 type mux struct {
-	datas        chan *internal.Data
-	processDatas chan *internal.Data
+	datas        chan *internal.Data //读取client队列
+	processDatas chan *internal.Data //发送client队列
 	//maxReceiveData int32
 	// notify a read event
 	chReadEvent chan struct{}
 
-	conn     socket.Socker
+	sess     *session.Session       //tcp 连接session
 	dataLock sync.Mutex
 
 	dataNotify chan struct{}
@@ -31,14 +33,12 @@ type mux struct {
 	worker     int
 }
 
-func NewMux(conn net.Conn) *mux {
+func NewMux(sess *session.Session) *mux {
 	return &mux{
 		datas:        make(chan *internal.Data, MAX_RECEIVE_DATA),
 		processDatas: make(chan *internal.Data, MAX_RECEIVE_DATA),
-		//maxReceiveData:MAX_RECEIVE_DATA,
 		chReadEvent: make(chan struct{}),
-		conn:        socket.NewTcpConn(conn),
-
+		sess:sess,
 		dataNotify: make(chan struct{}),
 		connDead:   make(chan struct{}),
 	}
@@ -46,76 +46,63 @@ func NewMux(conn net.Conn) *mux {
 }
 
 func (m *mux) Operate() {
-	defer close(m.processDatas)
+	defer func() {
+		golog.Info("Operate close(m.processDatas)")
+		close(m.processDatas)
+	}()
 
 	defer pool.Release()
 	for d := range m.datas {
 		data := d
 		pool.JobQueue <- func() {
-			switch data.Op {
-			case internal.OP_REQ_GET:
-				value, ok := cache.Get(data.Key)
-				if ok {
-					data.Op = internal.OP_RESP_200
-					data.Value = value
-				} else {
-					data.Op = internal.OP_RESP_404
-					data.Value = []byte("key not found")
-				}
-			case internal.OP_REQ_PUT:
-				cache.Set(data.Key, data.Value)
-
+			value, ok := cache.Get(data.Key)
+			if ok {
 				data.Op = internal.OP_RESP_200
-				data.Value = nil
-			case internal.OP_REQ_DEL:
-				cache.Del(data.Key)
-
-				data.Op = internal.OP_RESP_200
-				data.Value = nil
-			default:
-				data.Op = internal.OP_RESP_402
-				data.Value = []byte("Reserved, used in the future")
-
+				data.Value = value
+			} else {
+				data.Op = internal.OP_RESP_404
+				data.Value = []byte("key not found")
 			}
-
+			//对数据处理后写入发送client队列
 			m.processDatas <- data
 		}
 
 	}
 }
 
+//读取数据写入 client读取队列
 func (m *mux) Read() {
 	var err error
-
 	defer func() {
+		golog.Info("(m *mux) Read() close(m.datas)")
 		close(m.datas)
-		m.conn.Close()
+		session.HubClose(m.sess)
 	}()
 	for {
 		var data = &internal.Data{}
-		err = m.conn.ReadMsg(data)
+		err = m.sess.ReadMsg(data)
 		if err == io.EOF {
-			golog.Info("mux.Read", "clientIP", m.conn.RemoteIP(), "err", "io.EOF")
+			golog.Info("mux.Read", "clientIP", m.sess.RemoteIP(), "err", "io.EOF")
 			return
 		}
 
 		if err != nil {
-			golog.Error("mux.Read", "clientIP", m.conn.RemoteIP(), "err", err)
+			golog.Error("mux.Read", "clientIP", m.sess.RemoteIP(), "err", err)
 			return
 		}
 
 		m.datas <- data
-
 	}
 }
 
+//接收数据写入 client发送队列
 func (m *mux) Write() {
 	var err error
 	for data := range m.processDatas {
-		_, err = m.conn.WriteMsg(data)
+		_, err = m.sess.WriteMsg(data)
 		if err != nil {
 			golog.Error("mux.Write", "err", err)
-			m.conn.Close()
+			session.HubClose(m.sess)
 			return
 		}
 	}

@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/ivpusic/grpool v1.0.0
+	github.com/lucas-clemente/quic-go v0.14.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cast v1.3.0
 	github.com/spf13/cobra v0.0.5

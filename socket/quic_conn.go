@@ -3,42 +3,47 @@ package socket
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/lucas-clemente/quic-go"
 	"github.com/wudaoluo/dcache/internal"
 	"github.com/wudaoluo/golog"
 	"io"
-	"net"
 	"time"
 )
 
-type tcpConn struct {
+type quicStream struct {
 	readAge time.Duration
-	net.Conn
+	stream quic.Stream
 	closed bool
 }
 
-func NewTcpConn(conn net.Conn) Socker {
-	return &tcpConn{
-		Conn:conn,
+func NewQuicStream(stream quic.Stream) Socker {
+	return &quicStream{
+		stream:stream,
 		closed:false,
 		readAge:10*time.Second,  //连接默认存活时间
 	}
 }
 
-func (tc *tcpConn) Close() {
-	if !tc.closed {
-		golog.Info("tcpConn.Close", "clientIP", tc.RemoteAddr())
-		tc.Conn.Close()
+func (qs *quicStream) RemoteIP() string {
+	return ""
+}
+
+func (qs *quicStream) StreamId() quic.StreamID {  //int64
+	return qs.stream.StreamID()
+}
+
+func (qs *quicStream) Close() {
+	if !qs.closed {
+		golog.Info("quicConn.Close", "streamid", qs.StreamId())
+		_ = qs.stream.Close()
 	}
 }
 
-func (tc *tcpConn) RemoteIP() string {
-	return tc.Conn.RemoteAddr().String()
-}
 
-func (tc *tcpConn) ReadMsg(data *internal.Data) error {
-	tc.Conn.SetReadDeadline(time.Now().Add(tc.readAge))
+func (qs *quicStream) ReadMsg(data *internal.Data) error {
+	qs.stream.SetReadDeadline(time.Now().Add(qs.readAge))
 	msgHeadBuf := make([]byte, MSG_HEAD_LEN, MSG_HEAD_LEN)
-	msgLen, err := tc.ReadLen(msgHeadBuf)
+	msgLen, err := qs.ReadLen(msgHeadBuf)
 	if err != nil {
 		return err
 	}
@@ -52,7 +57,7 @@ func (tc *tcpConn) ReadMsg(data *internal.Data) error {
 	}
 
 	msgBuf := make([]byte, msgLen)
-	if _, err := io.ReadFull(tc, msgBuf); err != nil {
+	if _, err := io.ReadFull(qs.stream, msgBuf); err != nil {
 		return err
 	}
 
@@ -68,9 +73,9 @@ func (tc *tcpConn) ReadMsg(data *internal.Data) error {
 	return nil
 }
 
-func (tc *tcpConn) ReadLen(b []byte) (n int, err error) {
+func (qs *quicStream) ReadLen(b []byte) (n int, err error) {
 	// read len
-	if _, err := io.ReadFull(tc, b); err != nil {
+	if _, err := io.ReadFull(qs.stream, b); err != nil {
 		return 0, err
 	}
 
@@ -78,7 +83,7 @@ func (tc *tcpConn) ReadLen(b []byte) (n int, err error) {
 }
 
 //TODO ERR 统一处理
-func (tc *tcpConn) WriteMsg(data *internal.Data) (n int, err error) {
+func (qs *quicStream) WriteMsg(data *internal.Data) (n int, err error) {
 	msgLen := len(data.Value) + len(data.Key) + valueHeadFront
 
 	if msgLen > MAX_MSG_LEN {
@@ -103,5 +108,5 @@ func (tc *tcpConn) WriteMsg(data *internal.Data) (n int, err error) {
 	msg = append(msg, data.Key...)
 	msg = append(msg, valueLenBuf...)
 	msg = append(msg, data.Value...)
-	return tc.Write(msg)
+	return qs.stream.Write(msg)
 }

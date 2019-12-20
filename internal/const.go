@@ -12,7 +12,8 @@ const (
 type Port int32
 
 const (
-	TCP_PORT  Port = 7777
+	TCP_PORT  Port = 7777    //tcp
+	QUIC_PORT  Port = 7777   //udp
 	GRPC_PORT Port = 7778
 )
 

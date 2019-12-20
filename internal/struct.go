@@ -3,6 +3,7 @@ package internal
 type Services struct {
 	TCP     bool
 	GRPC    bool
+	QUIC    bool
 	ALL     bool
 	Listen  string
 	MaxConn int

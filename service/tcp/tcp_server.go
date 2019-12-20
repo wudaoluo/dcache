@@ -1,15 +1,14 @@
-package service
+package tcp
 
 import (
+	"github.com/wudaoluo/dcache/plugin/session"
+	"github.com/wudaoluo/dcache/service"
+	"github.com/wudaoluo/dcache/socket"
 	"net"
-	"io"
 	"time"
 
-	"golang.org/x/net/netutil"
 	"github.com/wudaoluo/golog"
-
-	"github.com/wudaoluo/dcache/socket"
-	"github.com/wudaoluo/dcache/internal"
+	"golang.org/x/net/netutil"
 )
 
 type tcpServer struct {
@@ -17,8 +16,11 @@ type tcpServer struct {
 	maxConn int
 }
 
-func NewTcpServer(listen string, maxConn int) Service {
-	return &tcpServer{listen: listen, maxConn: maxConn}
+func NewTcpServer(listen string, maxConn int) service.Service {
+	return &tcpServer{
+		listen: listen,
+		maxConn: maxConn,
+	}
 }
 
 func (t *tcpServer) Run() {
@@ -68,43 +70,43 @@ func (t *tcpServer) Run() {
 				return
 			}
 		}
-
-		go t.newHandler(conn)
+		sess := session.NewSession(socket.NewTcpConn(conn))
+		session.HubAdd(sess)
+		go t.newHandler(sess)
 
 	}
 }
 
-func (t *tcpServer) newHandler(conn net.Conn) {
-	m := NewMux(conn)
+func (t *tcpServer) newHandler(sess *session.Session) {
+	m := service.NewMux(sess)
 	go m.Read()
 	go m.Write()
 	go m.Operate()
 }
-
-func (t *tcpServer) handler(conn net.Conn) {
-	c := socket.NewTcpConn(conn)
-	defer c.Close()
-	var err error
-	for {
-		var data = &internal.Data{}
-		time.Sleep(3 * time.Second)
-		err = c.ReadMsg(data)
-		if err == io.EOF {
-			golog.Info("tcpServer.handler", "clientIP", c.RemoteIP(), "err", "io.EOF")
-			return
-		}
-		if err != nil {
-			golog.Error("tcpServer.handler", "clientIP", c.RemoteIP(), "err", err)
-			return
-		}
-
-		operate(data)
-
-		_, err = c.WriteMsg(data)
-		if err != nil {
-			golog.Error("tcpServer.handler", "err", err)
-			return
-		}
-	}
-
-}
+//
+//func (t *tcpServer) handler(conn net.Conn) {
+//	c := socket.NewTcpConn(conn)
+//	defer c.Close()
+//	var err error
+//	for {
+//		var data = &internal.Data{}
+//		err = c.ReadMsg(data)
+//		if err == io.EOF {
+//			golog.Info("tcpServer.handler", "clientIP", c.RemoteIP(), "err", "io.EOF")
+//			return
+//		}
+//		if err != nil {
+//			golog.Error("tcpServer.handler", "clientIP", c.RemoteIP(), "err", err)
+//			return
+//		}
+//
+//		operate(data)
+//
+//		_, err = c.WriteMsg(data)
+//		if err != nil {
+//			golog.Error("tcpServer.handler", "err", err)
+//			return
+//		}
+//	}
+//
+//}

@@ -5,7 +5,7 @@ import (
 	"github.com/wudaoluo/dcache/internal"
 )
 
-func operate(data *internal.Data) {
+func Operate(data *internal.Data) {
 	switch data.Op {
 	case internal.OP_REQ_GET:
 		value, ok := cache.Get(data.Key)
