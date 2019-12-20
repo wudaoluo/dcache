@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/lucas-clemente/quic-go"
 	"github.com/wudaoluo/dcache/internal"
-	"github.com/wudaoluo/golog"
 	"io"
 	"time"
 )
@@ -34,7 +33,7 @@ func (qs *quicStream) StreamId() quic.StreamID {  //int64
 
 func (qs *quicStream) Close() {
 	if !qs.closed {
-		golog.Info("quicConn.Close", "streamid", qs.StreamId())
+		//golog.Info("quicConn.Close", "streamid", qs.StreamId())
 		_ = qs.stream.Close()
 	}
 }
