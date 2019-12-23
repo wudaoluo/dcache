@@ -40,7 +40,7 @@ to quickly create a Cobra application.`,
 		var wg = sync.WaitGroup{}
 
 		if serviceFlag.TCP || serviceFlag.ALL{
-			runService(&wg, tcp.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn))
+			runService(&wg, tcp.NewTcpServer(internal.TCP_PORT.GetAddr(serviceFlag.Listen), serviceFlag.MaxConn,serviceFlag.TCPMux))
 		}
 
 		if serviceFlag.QUIC || serviceFlag.ALL{
@@ -79,6 +79,7 @@ func init() {
 	serviceCmd.Flags().BoolVar(&serviceFlag.QUIC, "quic", true, "run quic server")
 	serviceCmd.Flags().BoolVar(&serviceFlag.GRPC, "grpc", false, "run grpc server")
 	serviceCmd.Flags().BoolVar(&serviceFlag.ALL, "all", false, "run all server")
+	serviceCmd.Flags().BoolVar(&serviceFlag.TCPMux, "tcpmux", false, "start tcp mux default close")
 
 	serviceCmd.Flags().StringVar(&serviceFlag.Listen, "listen", "0.0.0.0", "--listen")
 	serviceCmd.Flags().IntVar(&serviceFlag.MaxConn, "maxconn", 1000, "--maxconn")

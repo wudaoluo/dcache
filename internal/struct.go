@@ -5,6 +5,7 @@ type Services struct {
 	GRPC    bool
 	QUIC    bool
 	ALL     bool
+	TCPMux  bool
 	Listen  string
 	MaxConn int
 }
