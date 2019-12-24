@@ -29,7 +29,7 @@ func NewQuicServer(listen string, maxConn int) service.Service {
 }
 
 func (q *quicServer) Run() {
-	ln, err := quic.ListenAddr(q.listen, generateTLSConfig(), nil)
+	ln, err := quic.ListenAddr(q.listen, nil, nil)
 	if err != nil {
 		panic(err)
 	}

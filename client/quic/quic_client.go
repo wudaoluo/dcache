@@ -70,8 +70,6 @@ func main() {
 			wg.Add(1)
 			go process(ch, &wg, session)
 		}
-
-
 	}
 	wg.Wait()
 	d := time.Now().Sub(start)
